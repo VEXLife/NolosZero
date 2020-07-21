@@ -46,6 +46,7 @@ class NZTrainer:
         pickle.dump(self.traindata,f)
         f.close()
 
+    '''
     def rotdata(self,data):
         edata=[]
         for i in [1, 2, 3, 4]:
@@ -56,6 +57,7 @@ class NZTrainer:
             ey = np.fliplr(ey)
             edata.append((ex,ey.flatten(),data[2]))
         return edata
+    '''
 
     '''def rotdata(self,data):
         edata=[]
@@ -72,11 +74,10 @@ class NZTrainer:
         temp=np.zeros(c.edge**2)
         for a,i in node.children.items():
             temp[a]=i.N
-        self.ty.extend(self.rotdata([c.pubNN.modifyX(board),softmax(1.0/c.tau*np.log(temp)),board.player]))
+        self.ty.extend([[c.pubNN.modifyX(board)[0],softmax(1.0*np.log(temp)/c.tau),board.player]])
 
     def extenddata2(self,winned,winner):
         for i in self.ty:
-            V=0
             if winned:
                 if winner==i[2]:
                     V=1
@@ -96,7 +97,7 @@ class NZTrainer:
         c.tau=1
         player=NolosZeroPlayer()
         while True:
-            #gm.draw()
+            gm.draw()
             p=player.play(gm=gm,silence=True)
             self.extenddata(player.rn.parent,deepcopy(gm))
             gm.domove(p)
@@ -138,11 +139,11 @@ class NZTrainer:
                     x.append(data[0])
                     probs.append(data[1])
                     values.append([2])
-                old_probs, old_v = c.pubNN.model.predict_on_batch(np.array(x))
+                #old_probs, old_v = c.pubNN.model.predict_on_batch(np.array(x))
                 for i in range(c.epochs):
                     K.set_value(c.pubNN.model.optimizer.lr,c.lr*c.factor)
                     c.pubNN.model.fit(np.array(x),[np.array(probs),np.array(values)],batch_size=c.minbatch,epochs=1)
-                    new_probs, new_v = c.pubNN.model.predict_on_batch(np.array(x))
+                '''    new_probs, new_v = c.pubNN.model.predict_on_batch(np.array(x))
                     kl = np.mean(np.sum(old_probs * (
                             np.log(old_probs + 1e-10) - np.log(new_probs + 1e-10)),
                             axis=1)
@@ -150,7 +151,7 @@ class NZTrainer:
                 if kl > c.min_delta * 2 and c.factor > 0.1:
                     c.factor /= 1.5
                 elif kl < c.min_delta / 2 and c.factor < 10:
-                    c.factor *= 1.5
+                    c.factor *= 1.5'''
                 c.pubNN.save_net()
                 print("本次训练完成！")
         except KeyboardInterrupt:
